@@ -1,0 +1,58 @@
+---
+layout: post
+status: publish
+published: true
+title: SETTING APACHE REVERSE PROXY FOR TRANSMISSION WEB
+author:
+  display_name: wathmal
+  login: wathmal
+  email: sasithawathmal@gmail.com
+  url: http://wathmal.me
+author_login: wathmal
+author_email: sasithawathmal@gmail.com
+author_url: http://wathmal.me
+wordpress_id: 139
+wordpress_url: https://wathmal.me/blog/?p=139
+date: '2016-06-08 15:30:34 +0530'
+date_gmt: '2016-06-08 15:30:34 +0530'
+categories:
+- server administration
+tags:
+- apache
+- transmission
+- reverse proxy
+comments: []
+---
+<p>howdy fellas! :) today i had to setup apache reverse proxy with my transmission web interface. in my <em>university wifi all ports are blocked other than port 80</em> and in order to access my transmission server i had to either <strong>setup an apache reverse proxy or make transmission daemon run on port 80.</strong></p>
+<p>for this, first you have to enable apache <strong>mod_proxy</strong> and <strong>mod_proxy_http</strong> modules.</p>
+<p>[code lang="bash"]<br />
+sudo a2enmod proxy<br />
+sudo a2enmod proxy_http<br />
+[/code]</p>
+<p>next you need to edit the apache configuration file. so first open it with nano.</p>
+<p>[code lang="bash"]<br />
+cd /etc/apache2/sites-available<br />
+sudo nano 000-default.conf<br />
+[/code]</p>
+<p>your default configuration file name might not same as <code>000-default.conf</code>. provide the appropriate name.</p>
+<p>next you need to add following configuration block to the conf file. <strong>here our goal is to access transmission web interface via http://mydomain.me/transmission instead of http://mydomain.me:9091</strong></p>
+<p>[code lang="plain"]<br />
+ProxyRequests Off<br />
+<Proxy *><br />
+        AddDefaultCharset off<br />
+        Order Allow,Deny<br />
+        Allow from all<br />
+</Proxy></p>
+<p>ProxyPass /transmission http://mydomain.me:9091/transmission<br />
+ProxyPassReverse /transmission http://mydomain.me:9091/transmission</p>
+<p>ProxyVia On<br />
+[/code]</p>
+<p><span style="text-decoration: underline;">following isn't the reason for HTTP 409 conflict error.</span><br />
+<del>one thing to note is <strong>don't</strong> add <code>http://localhost:9091/transmission</code> instead of&nbsp;<code>http://mydomain.me:9091/transmission</code>. in my configuration putting localhost instead of actual domain generated <strong><code>HTTP 409 conflict error</code></strong>.</del></p>
+<p>save the file &amp; exit. next restart the apache server and you are almost done.</p>
+<p>[code lang="bash"]<br />
+sudo service apache2 restart<br />
+[/code]</p>
+<p>now you can access your transmission web interface via <code>http://mydomain.me/transmission/web/</code>. :) so happy reverse proxying.</p>
+<p><span style="text-decoration: underline;">update *</span><br />
+<strong>note that you have to access transmission web interface via the exact url as&nbsp;above. if you loose or don't add <code>/web/</code> part you'll receive HTTP 409 conflict error.</strong></p>

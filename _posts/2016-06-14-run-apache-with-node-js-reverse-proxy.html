@@ -1,0 +1,189 @@
+---
+layout: post
+status: publish
+published: true
+title: RUN APACHE WITH NODE JS REVERSE PROXY - USING REDBIRD
+author:
+  display_name: wathmal
+  login: wathmal
+  email: sasithawathmal@gmail.com
+  url: http://wathmal.me
+author_login: wathmal
+author_email: sasithawathmal@gmail.com
+author_url: http://wathmal.me
+wordpress_id: 148
+wordpress_url: https://wathmal.me/blog/?p=148
+date: '2016-06-14 18:15:29 +0530'
+date_gmt: '2016-06-14 18:15:29 +0530'
+categories:
+- server administration
+tags:
+- node js
+- servers
+- apache
+- reverse proxy
+- ubuntu
+comments:
+- id: 67
+  author: Magick
+  author_email: magick@johanteras.com
+  author_url: http://trianglescanpokeyoureyesout@johanteras.com
+  date: '2016-08-20 23:13:19 +0530'
+  date_gmt: '2016-08-20 23:13:19 +0530'
+  content: That's all nice, and I got it all working, no probs ye. Butttt. When I
+    deliberately try to use http on my apache sites ( normally working on https, just
+    like my node site ) , it redirects the request to my node site. So I see you have
+    some special conf. for 443 as well there. Would you be so kind and explain the
+    whole thing, quickly, for HTTPS as well, as afterall, it is 2016. Thanks!
+- id: 68
+  author: Magick
+  author_email: magick@johanteras.com
+  author_url: http://trianglescanpokeyoureyesout@johanteras.com
+  date: '2016-08-22 21:29:05 +0530'
+  date_gmt: '2016-08-22 21:29:05 +0530'
+  content: Okay.. confusing. As it all seems to work even without the proxy.js..
+- id: 70
+  author: Sebastian
+  author_email: sebastian@veams.org
+  author_url: ''
+  date: '2016-09-14 20:10:37 +0530'
+  date_gmt: '2016-09-14 20:10:37 +0530'
+  content: Nice article... Thx, will test it.
+- id: 71
+  author: wathmal
+  author_email: sasithawathmal@gmail.com
+  author_url: http://wathmal.me
+  date: '2016-10-04 10:43:33 +0530'
+  date_gmt: '2016-10-04 10:43:33 +0530'
+  content: "hi, sorry for the late reply. :)\r\n\r\nyou can configure ssl on redbird
+    with following configuration.\r\n\r\n\r\n<blockquote>var proxy = require('redbird')({port:
+    80, xfwd: false,\r\nssl: {\r\n        port: 443,\r\n        key: \"./path/to/key/file.key\",\r\n
+    \       cert: \"./path/to/certificate/file.crt\",\r\n    }\r\n});</blockquote>\r\n\r\n\r\n<strong>also,
+    u need to have configured ssl on apache virtual host.</strong>\r\nhope it helps.
+    thanks. :)"
+- id: 79
+  author: JEFF
+  author_email: jeffdeleon26@yahoo.com
+  author_url: ''
+  date: '2016-11-12 15:11:14 +0530'
+  date_gmt: '2016-11-12 09:41:14 +0530'
+  content: |-
+    having error running on Ubuntu 12.04:
+    ****MY CODE***
+    var proxy = require('redbird')({port: 80, xfwd: false});
+    proxy.register("some.net", "http://1.2.3.4:8080");
+    proxy.register("some.net/node", "http://1.2.3.4:3000");
+
+    ****ERROR*********
+    node_modules/redbird/lib/proxy.js:401
+    function renewCertificate() {
+    ^^^^^^^^
+    SyntaxError: In strict mode code, functions can only be declared at top level or immediately within another function.
+    at Module._compile (module.js:439:25)
+    at Object.Module._extensions..js (module.js:474:10)
+    at Module.load (module.js:356:32)
+    at Function.Module._load (module.js:312:12)
+    at Module.require (module.js:364:17)
+    at require (module.js:380:17)
+    at Object. (/home/enutritionista/node_modules/redbird/index.js:3:18)
+    at Module._compile (module.js:456:26)
+    at Object.Module._extensions..js (module.js:474:10)
+    at Module.load (module.js:356:32)
+- id: 80
+  author: jeff
+  author_email: deleonjy@gmail.com
+  author_url: ''
+  date: '2016-11-12 15:12:06 +0530'
+  date_gmt: '2016-11-12 09:42:06 +0530'
+  content: |-
+    having error running on Ubuntu 12.04:
+    ****MY CODE***
+    var proxy = require('redbird')({port: 80, xfwd: false});
+    proxy.register("some.net", "http://1.2.3.4:8080");
+    proxy.register("some.net/node", "http://1.2.3.4:3000");
+
+    ****ERROR*********
+    node_modules/redbird/lib/proxy.js:401
+    function renewCertificate() {
+    ^^^^^^^^
+    SyntaxError: In strict mode code, functions can only be declared at top level or immediately within another function.
+    at Module._compile (module.js:439:25)
+    at Object.Module._extensions..js (module.js:474:10)
+    at Module.load (module.js:356:32)
+    at Function.Module._load (module.js:312:12)
+    at Module.require (module.js:364:17)
+    at require (module.js:380:17)
+    at Object. (/home/enutritionista/node_modules/redbird/index.js:3:18)
+    at Module._compile (module.js:456:26)
+    at Object.Module._extensions..js (module.js:474:10)
+    at Module.load (module.js:356:32)
+---
+<p>if you are learning or using nodejs, most of you might encounter the problem of&nbsp;<strong>running nodejs with apache or nginx</strong>. there are several solutions for&nbsp;this issue, with several pros and cons for each solution. for this article i'll only consider we have a web server with apache.</p>
+<p>some of suggested solutions are:</p>
+<ol>
+<li>use a reverse proxy with apache (<strong>with mod_proxy</strong>) to serve nodejs apps</li>
+<li>disable apache and run nodejs on port 80 :D</li>
+<li>run nodejs on port 80 with a <strong>reverse proxy configured on&nbsp;nodejs</strong></li>
+</ol>
+<p>if you go with first method, <strong><em>you are really wasting the power of nodejs</em></strong>. but if you do a simple google search on this, lots of articles will suggest you or show you to go with this approach. i am not going to explain this in depth. following extracted text&nbsp;will explain what is the downside of this approach very well. :)</p>
+<blockquote><p>you just bought a brand new ferrari and you want to take it for a spin on the highway.. so you go there.. but there is a big fat truck in front of you that only goes 50mph and there is no way to get passed it.</p></blockquote>
+<blockquote><p>that is basically what you are doing if you put apache (truck) in front of nodejs (ferarri) this defeats one of the main purposes of using nodejs having a FAST evented machine.. which does not allocate threads for requests.</p></blockquote>
+<p>in the second approach, the <strong><em>only downside is you will lost your apache server</em></strong>. so if you run some CMS es like wordpress / drupal you have to find other alternative options like our 3rd solution.</p>
+<p>so the 3rd option, running a reverse proxy with nodejs. this idea is really crazy. :D following are the steps to do this.</p>
+<ol>
+<li>first we have to &nbsp;make apache run on different port other than port 80.</li>
+<li>then configure nodejs to run on port 80.</li>
+<li>create the proxy script with redbird.</li>
+<li>configure PM2 to auto the start proxy server.</li>
+</ol>
+<p>and we are done.</p>
+<h3>step 1:&nbsp;make apache run on different port</h3>
+<p>first open <code>ports.conf</code> in <code>/etc/apache2/</code> directory.</p>
+<p>[code lang="bash"]sudo nano /etc/apache2/ports.conf[/code]</p>
+<p>then change <code>Listen 80</code> to <code>Listen 8080</code><br />
+so the <code>ports.conf</code> will look like following.</p>
+<p>[code lang="text"]<br />
+Listen 8080</p>
+<p><IfModule ssl_module><br />
+	Listen 8443<br />
+</IfModule></p>
+<p><IfModule mod_gnutls.c><br />
+	Listen 8443<br />
+</IfModule></p>
+<p>[/code]</p>
+<p>next open <code>000-default.conf</code> in <code>/etc/apache2/sites-available</code> directory.<br />
+change <code><VirtualHost *:80></code> to the previously given port as <code><VirtualHost *:8080></code> and restart the apache server to reflect the changes.</p>
+<p>[code lang="bash"]sudo service apache2 restart[/code]</p>
+<h3></h3>
+<h3>step 2: configure nodejs to run on port 80</h3>
+<p>to run nodejs on port 80, the script will need sudo permission. but there are several ways to do this without sudo permission, which is more safer. we can bind nodejs to listen on lower ports (1 - 1024) by following commands.</p>
+<p>[code lang="bash"]<br />
+sudo apt-get install libcap2-bin<br />
+sudo setcap cap_net_bind_service=+ep /usr/local/bin/node<br />
+[/code]</p>
+<p>once you do this, we can listen to all lower ports including port 80 via our nodejs app.</p>
+<h3>step 3:&nbsp;create the proxy script</h3>
+<p>now we have to write the reverse proxy script. for an example let's say we have a wordpress blog running with apache on <code>http://mydomain.me:8080/blog/</code> (in the first step, me made apache run on port 80) and a nodejs app running on <code>http://mydomain.me:3000/</code> and we want to make both of these apps available on port 80.</p>
+<p>to write the proxy script we will be using a npm module called <strong><a href="https://github.com/OptimalBits/redbird" target="_blank">redbird</a></strong>. we can begin writing the script as follows.</p>
+<p>&nbsp;</p>
+<p>[code lang="js"]<br />
+var proxy = require('redbird')({port: 80, xfwd: false);</p>
+<p>proxy.register("mydomain.me/blog", "http://mydomain.me:8080/blog");<br />
+proxy.register("mydomain.me", "http://mydomain.me:3000");<br />
+[/code]</p>
+<p>note than, this reverse proxy script is set to run on port 80. now if you run this script with <code>node proxy.js</code> we'll be able to access our blog via <code>http://mydomain.me/blog/</code> and our node app on port 3000 via <code>http://mydomian.me/</code>. :)</p>
+<h3>step 4:&nbsp;configure PM2 to auto start the proxy server</h3>
+<p>next step is to making this proxy script auto-start when the system boots. there is a great tool which will do this job for us called <strong>PM2.</strong> install and configure it if you haven't already used it.</p>
+<p>&nbsp;</p>
+<p>[code lang="bash"]<br />
+sudo npm install -g pm2<br />
+pm2 startup ubuntu<br />
+[/code]</p>
+<p>this last line will output a command for you to run on the terminal to make PM2 auto start on system boot. run it and you are almost done.</p>
+<p>next step would be adding our proxy script to process list of PM2. then PM2 will take care of our script&nbsp;for us.</p>
+<p>[code lang="bash"]pm2 start proxy.js[/code]</p>
+<p>also via PM2 we can start / stop / restart the process like we use services in linux.</p>
+<p><strong>references:</strong><br />
+<a href="https://groups.google.com/d/msg/nodejs/HX_j8LqFAso/pma5pSQR08IJ" target="_blank">https://groups.google.com/d/msg/nodejs/HX_j8LqFAso/pma5pSQR08IJ</a><br />
+<a href="https://github.com/OptimalBits/redbird" target="_blank">https://github.com/OptimalBits/redbird</a><br />
+<a href="https://www.digitalocean.com/community/tutorials/how-to-use-pm2-to-setup-a-node-js-production-environment-on-an-ubuntu-vps" target="_blank">https://www.digitalocean.com/community/tutorials/how-to-use-pm2-to-setup-a-node-js-production-environment-on-an-ubuntu-vps</a></p>

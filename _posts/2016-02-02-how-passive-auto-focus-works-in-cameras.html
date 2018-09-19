@@ -1,0 +1,65 @@
+---
+layout: post
+status: publish
+published: true
+title: HOW PASSIVE AUTO FOCUS WORKS IN CAMERAS
+author:
+  display_name: wathmal
+  login: wathmal
+  email: sasithawathmal@gmail.com
+  url: http://wathmal.me
+author_login: wathmal
+author_email: sasithawathmal@gmail.com
+author_url: http://wathmal.me
+wordpress_id: 70
+wordpress_url: https://wathmal.me/wordpress/?p=70
+date: '2016-02-02 14:30:09 +0530'
+date_gmt: '2016-02-02 14:30:09 +0530'
+categories:
+- photography
+tags:
+- image processing
+- auto focus
+- camera
+comments: []
+---
+<p style="text-align: justify;">did you ever wonder how your smartphone manage to focus on any place you tap on the camera app? :) okey, even if u did or didn't now you gonna find how.</p>
+<p style="text-align: justify;">to&nbsp;achieve the correct focus, modern digital cameras have come up with 3 approaches such as, <strong>ACTIVE, PASSIVE and HYBRID</strong>. in <strong>ACTIVE</strong> approach they use separate sensor mechanism to detect focus. in <strong>PASSIVE</strong> approach, it uses algorithmic ways to find correct focus from the input of the optical system. there are few&nbsp;ways doing this, i'm gonna show you, how it is done with "<em><strong>contrast detection</strong></em>" method.</p>
+<p style="text-align: justify;">so let's jump into some facts. ;)</p>
+<p><strong>when a region is at its sharpest focus, the adjacent pixels in the region will be at maximum contrast.</strong> in another word difference between intensity levels in the region is higher than the differences between intensity levels in the region, when the region is not focused.</p>
+<p>what will happen to the image mean when it is focused or blurred? so let us take a sample image, make it blur and calculate the mean of those two. i blurred the image using gimp (gaussian blur radius 10px) and calculated image statics using <code>imagemagic</code>.</p>
+<table>
+<tbody>
+<tr>
+<td><img class="size-medium wp-image-91 aligncenter" src="http://wathmal.me/blog/wp-content/uploads/2016/03/independent-arcade-lightings-300x169.jpg" alt="independent-arcade-lightings" width="300" height="169" /></td>
+<td><img class="size-medium wp-image-92 aligncenter" src="http://wathmal.me/blog/wp-content/uploads/2016/03/independent-arcade-lightings_blurred-300x169.jpg" alt="independent-arcade-lightings-blurred" width="300" height="169" /></td>
+</tr>
+<tr>
+<td>Image statistics:<br />
+Overall:<br />
+min: 0 (0)<br />
+max: 255 (1)<br />
+<strong>mean: 63.7428 (0.249972)</strong><br />
+<strong>standard deviation: 80.7208 (0.316552</strong>)<br />
+kurtosis: 0.641563<br />
+skewness: 1.33126</td>
+<td>Image statistics:<br />
+Overall:<br />
+min: 0 (0)<br />
+max: 255 (1)<br />
+<strong>mean: 63.7887 (0.250152)</strong><br />
+<strong>standard deviation: 76.3692 (0.299487)</strong><br />
+kurtosis: 0.721282<br />
+skewness: 1.30604</td>
+</tr>
+</tbody>
+</table>
+<p><code>identify -verbose independent-arcade-lightings.jpg</code>&nbsp;command will pull out all image statistics of you image.</p>
+<p>as you can see,&nbsp;<em>mean of the both original and blurred images is same.</em> :) so image mean does not affect with the focus of the image. also, you can see that <em>standard deviation is the variable which has changed with the blurring. </em>an image's standard deviation is directly related to its contrast. (<em>standard deviation expresses by how much the members of a group differ from the mean value for the group</em>)</p>
+<p>so we can conclude 2 facts about <strong>focus</strong>.</p>
+<ol style="list-style-type: lower-alpha;">
+<li>focus does not affect image mean.</li>
+<li>the spread of the pixel intensities (standard deviation) is affected by focusing.</li>
+</ol>
+<p>now we have a great way to measure if a region is focused or not. what we want to do is to implement <em><strong>a mechanical control system for the camera lens to achieve the highest possible contrast of the region</strong></em>. and that is what actually comes with PASSIVE AF digital cameras. the system can be modeled like below.</p>
+<p>[caption id="attachment_150" align="aligncenter" width="671"]<a href="https://creately.com/diagram/example/ijavv31m1" rel="attachment wp-att-150"><img class="size-full wp-image-150" src="http://wathmal.me/blog/wp-content/uploads/2016/02/camera-AF_.png" alt="camera auto focus mechanism" width="671" height="460" /></a> camera auto focus mechanism[/caption]</p>

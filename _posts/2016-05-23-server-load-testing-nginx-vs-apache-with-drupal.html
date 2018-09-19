@@ -1,0 +1,98 @@
+---
+layout: post
+status: publish
+published: true
+title: SERVER LOAD TESTING NGINX VS APACHE WITH DRUPAL
+author:
+  display_name: wathmal
+  login: wathmal
+  email: sasithawathmal@gmail.com
+  url: http://wathmal.me
+author_login: wathmal
+author_email: sasithawathmal@gmail.com
+author_url: http://wathmal.me
+wordpress_id: 114
+wordpress_url: https://wathmal.me/blog/?p=114
+date: '2016-05-23 16:00:18 +0530'
+date_gmt: '2016-05-23 16:00:18 +0530'
+categories:
+- server administration
+tags:
+- weekend projects
+- servers
+- apache
+- nginx
+- load testing
+- drupal
+comments: []
+---
+<p>here is the million dollar questoin! :D <strong>what is the best web server ? nginx or apache ?&nbsp;</strong>if you dig some deep on this, you'll come around that unless, <em><strong>you have a very big user base or limited hardware resources</strong></em>, it doesn't matter.</p>
+<p>so i wanted to test this with drupal, whether it actually makes a difference in a practical situation. (theoretically it should) thanks to AWS free tier i setup my test environment using AWS as below.</p>
+<h3>SETTING UP TEST ENVIRONMENT</h3>
+<p>following are the actions i performed in AWS console and in EC2,</p>
+<ul>
+<li>launched an EC2 instance</li>
+<li>launched RDS instance for mysql (for use as drupal's DB)</li>
+<li>installed both apache and nginx servers in EC2 instance</li>
+<li>installed drupal and connected it to RBD server</li>
+<li>added some dummy content in drupal site</li>
+</ul>
+<p><strong>next i&nbsp;created an image of my EC2 instance (AMI) and launched another instance with the same hardware&nbsp;features as&nbsp;previous&nbsp;EC2 instance in same region from the created AMI.</strong></p>
+<p>so the next steps followed are,</p>
+<ul>
+<li>configured&nbsp;one instance to run apache only and another to run nginx&nbsp;only.</li>
+<li>pointed drupal installation as root directory in both servers.</li>
+</ul>
+<p><em><strong>after this, i had two drupal installations with same content running on apache and nginx in same location.</strong></em></p>
+<h3>CREATING A&nbsp;TEST PLAN</h3>
+<p>so the basic thing i wanted to test is,</p>
+<blockquote><p>server performance in limited hardware over a large traffic.</p></blockquote>
+<p>i used <strong>jmeter</strong> with&nbsp;<strong><a href="http://jmeter-plugins.org/wiki/PerfMon/" target="_blank">performance&nbsp;monitor plugin</a></strong> for this. performance monitor plugin will allow you to measure server performance metrics in&nbsp;jmeter.(cool right ? :) )</p>
+<p>for the test plan, in jmeter</p>
+<ul>
+<li>added <em>thread group with 1000&nbsp;<em>threads</em></em>&nbsp;to simulate 1000 users</li>
+<li>inside thread group added <em>HTTP GET request to root folder</em> to simulate main page access in druapl site</li>
+<li>added a <em>performance monitor metric collector to measure server CPU &amp; memory usage</em></li>
+<li>added a <em>summary report to get overall statistics</em></li>
+</ul>
+<p>[caption id="attachment_121" align="alignnone" width="288"]<img class="size-full wp-image-121" src="http://wathmal.me/blog/wp-content/uploads/2016/05/test_plan.png" alt="jmeter test plan" width="288" height="186" /> jmeter test plan[/caption]</p>
+<p>&nbsp;</p>
+<h3>RESULTS</h3>
+<p>so i performed this same test on both of my EC2 instances. following are the results i obtained.</p>
+<p style="text-align: center;"><strong>APACHE</strong></p>
+<table>
+<tbody>
+<tr>
+<td>requests</td>
+<td>failed</td>
+<td>throughput</td>
+</tr>
+<tr>
+<td>1000</td>
+<td>18.7%</td>
+<td>4.437640063/hr</td>
+</tr>
+</tbody>
+</table>
+<p>[caption id="attachment_126" align="aligncenter" width="680"]<img class="wp-image-126 size-large" src="http://wathmal.me/blog/wp-content/uploads/2016/05/graph_apache-1024x274.png" alt="apache server performances for 1000 users" width="680" height="182" /> apache server performances[/caption]</p>
+<p style="text-align: center;"><strong>NGINX</strong></p>
+<table>
+<tbody>
+<tr>
+<td>requests</td>
+<td>failed</td>
+<td>throughput</td>
+</tr>
+<tr>
+<td>1000</td>
+<td>7.2%</td>
+<td>4.4314258999/hr</td>
+</tr>
+</tbody>
+</table>
+<p>[caption id="attachment_127" align="aligncenter" width="680"]<img class="size-large wp-image-127" src="http://wathmal.me/blog/wp-content/uploads/2016/05/graph_nginx-1024x274.png" alt="nginx server performances for 1000 users" width="680" height="182" /> nginx server performances[/caption]</p>
+<h3>CONCLUSION</h3>
+<p>so so so, here it is! answer for the million dollar question.</p>
+<blockquote><p>under a large&nbsp;traffic with same hardware resources, nginx performs way better than apache.</p></blockquote>
+<p><strong>references:</strong><br />
+<a href="https://www.digitalocean.com/community/tutorials/how-to-use-apache-jmeter-to-perform-load-testing-on-a-web-server" target="_blank">https://www.digitalocean.com/community/tutorials/how-to-use-apache-jmeter-to-perform-load-testing-on-a-web-server</a></p>

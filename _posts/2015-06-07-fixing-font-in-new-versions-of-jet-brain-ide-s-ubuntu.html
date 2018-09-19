@@ -1,0 +1,54 @@
+---
+layout: post
+status: publish
+published: true
+title: FIX FONT RENDERING IN NEW VERSIONS OF JETBRAIN IDE UBUNTU
+author:
+  display_name: wathmal
+  login: wathmal
+  email: sasithawathmal@gmail.com
+  url: http://wathmal.me
+author_login: wathmal
+author_email: sasithawathmal@gmail.com
+author_url: http://wathmal.me
+wordpress_id: 7
+wordpress_url: https://onezerology.wordpress.com/?p=7
+date: '2015-06-07 14:11:21 +0530'
+date_gmt: '2015-06-07 08:41:21 +0530'
+categories:
+- coding
+tags:
+- font
+- ide
+- issues
+- jetrains
+comments: []
+---
+<p style="text-align: justify;">if you try to install new versions of any jetbrain's IDE&nbsp;s you may have experience that fonts are not rendering well like previous versions. you may see fonts are rendered in ubuntu's default fonts and not in jetbrain's font set.</p>
+<p>[caption id="attachment_12" align="aligncenter" width="842"]<img class="wp-image-12 size-large" src="http://wathmal.me/blog/wp-content/uploads/2015/06/clion_settings_font_not_rendered.png?w=842" alt="jetbrains ide clion font not rendered" width="842" height="576" /> jetbrains ide clion font not rendered[/caption]</p>
+<p><strong>root permission method</strong></p>
+<p style="text-align: justify;">if you try to run the IDE as root this won't be happen, the fonts will render perfectly. so the solution here is to edit the desktop entity of the IDE to run as root. for that we need <strong>gksuso</strong> installed first.</p>
+<p>[code language="bash"]<br />
+sudo apt-get install gksu<br />
+[/code]</p>
+<p style="text-align: justify;">if you haven't already created a desktop entity create a one through <u>configure -> create desktop entity</u>. then we have to edit the created .desktop file in order to run the IDE as root everything you run in from unity dash. typically <code>.desktop</code> files are stored in <code><strong>/usr/share/applications</strong></code> or in <code><strong>~/.local/share/applications</strong></code>. check whether your corresponding desktop files lies in there. if so open it with gedit or your preferred text editor.</p>
+<p style="text-align: justify;">add <code>gksudo after Exec= entry</code> and save your <code>.desktop</code> file. edited file may looks like following.</p>
+<p>[code language="text"]<br />
+[Desktop Entry]<br />
+Version=1.0<br />
+Type=Application<br />
+Name=CLion<br />
+Icon=/opt/clion-1.0.3/bin/clion.svg<br />
+Exec=gksudo "/opt/clion-1.0.3/bin/clion.sh" %f<br />
+Comment=Develop with pleasure!<br />
+Categories=Development;IDE;<br />
+Terminal=false<br />
+StartupWMClass=jetbrains-clion<br />
+[/code]</p>
+<p style="text-align: justify;">now every time you launch the IDE you will be prompted to enter you root password and you can see the fonts are rendered so much perfect than before. hope entering your password one time won't be a pain as now you can work with your IDE more nicely than before.</p>
+<p>[caption id="attachment_17" align="aligncenter" width="842"]<img class="size-large wp-image-17" src="http://wathmal.me/blog/wp-content/uploads/2015/06/clion_black_font_well_rendered.png?w=842" alt="font perfectly shown in jetbrains clion ide" width="842" height="680" /> font perfectly shown in jetbrains clion ide[/caption]</p>
+<p><strong>update 2015-09-01</strong></p>
+<p style="text-align: justify;">instead of adding root permissions to the IDE you can change the IDE's font to default font which is used by all jetbrains IDEs. default font used by the IDE in ubuntu is <code><strong>dejavu-sans 12px</strong></code>. goto settings -> appearance, check override default fonts and select dejavu-sans 12 px as below and you are ready to go. :)</p>
+<p>[caption id="attachment_36" align="aligncenter" width="736"]<img class="size-large wp-image-36" src="http://wathmal.me/blog/wp-content/uploads/2015/09/override_fonts.png?w=736" alt="override font to dejavu-sans 12px to fix font rendering isse in new jetbrain ides" width="736" height="463" /> override font to dejavu-sans 12px[/caption]</p>
+<p><strong>references:</strong><br />
+<a href="http://askubuntu.com/a/484413/378106" target="_blank">http://askubuntu.com/a/484413/378106</a></p>

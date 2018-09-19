@@ -1,0 +1,203 @@
+---
+layout: post
+status: publish
+published: true
+title: CREATE YOUR OWN SMS GATEWAY
+author:
+  display_name: wathmal
+  login: wathmal
+  email: sasithawathmal@gmail.com
+  url: http://wathmal.me
+author_login: wathmal
+author_email: sasithawathmal@gmail.com
+author_url: http://wathmal.me
+wordpress_id: 182
+wordpress_url: http://wathmal.me/blog/?p=182
+date: '2016-10-25 23:58:14 +0530'
+date_gmt: '2016-10-25 18:28:14 +0530'
+categories:
+- coding
+- server administration
+tags:
+- python
+- sms gateway
+- sms
+- 3g
+- gsm
+comments:
+- id: 104
+  author: kioin
+  author_email: nag.vaibhav@gmail.com
+  author_url: http://kioin.bid.123web.org/
+  date: '2017-05-21 21:53:00 +0530'
+  date_gmt: '2017-05-21 16:23:00 +0530'
+  content: Building your own SMS API and gateway, however, is only feasible if you
+    have a tiny network of people to text, who will not mind the errors or security
+    risks that this development causes.
+---
+<p>here i am gonna show you how to setup a simple sms gateway from a <strong>3G USB dongle</strong> using <code>python</code>. the work-flow here is very simple. but before that let's go through with some basics of <strong>3G USB dongle</strong>.</p>
+<p>in our <code>gateway</code> once a valid request from the internet is received to our gateway, it should communicate with the dongle and send the message included in the request to the relevant number in the request. so the most important part in this would be <strong>communicating with the dongle</strong> when the gateway receives some request.</p>
+<p>basically your 3G dongle consists with a <strong>3G modem</strong> and <strong>USB to serial</strong> converter. 3G modem is something like below image. to communicate with the modem, it needs a serial (<code>RS-232</code>) connection and this is where <strong>USB to serial</strong> converter comes to play.<br />
+as all modern laptops are consists of USBs this converter is also integrated inside the dongle so we can easily plug it and communicate. so the catch from here is that we can use RS-232 / serial to communicate with our dongle.</p>
+<p>[caption id="attachment_190" align="aligncenter" width="500"]<img src="http://wathmal.me/blog/wp-content/uploads/2016/10/s-l1600-300x225.jpg" alt="GSM / 3G modem module. a tiny compact module is used in a dongle " width="300" height="225" class="size-medium wp-image-190" /> GSM / 3G modem module. a tiny compact module is used in a dongle [/caption]</p>
+<p>first let's try to communicate with our dongle with the <code>terminal</code> and if it succeed we can automate that with python to use in our <strong>SMS gateway</strong>.</p>
+<p>[caption id="attachment_195" align="aligncenter" width="897"]<img src="http://wathmal.me/blog/wp-content/uploads/2016/10/GSM_GPRS-Module.jpg" alt="GSM / 3G module communication flow." width="897" height="275" class="size-full wp-image-195" /> GSM / 3G module communication flow. source: http://www.engineersgarage.com/articles/gsm-gprs-modules[/caption]</p>
+<h2>testing on terminal</h2>
+<p>first plug the dongle (assuming that you have inserted a sim card with credit in it :P ) and find out the port it opened. open terminal and issue <code>dmesg | grep tty</code> command to find out connected USB devices.<br />
+you will obtain an output like below.</p>
+<p>[code lang=bash]<br />
+[   14.124879] usb 1-1.4: GSM modem (1-port) converter now attached to ttyUSB0<br />
+[   14.126676] usb 1-1.4: GSM modem (1-port) converter now attached to ttyUSB1<br />
+[   14.127795] usb 1-1.4: GSM modem (1-port) converter now attached to ttyUSB2<br />
+[/code]</p>
+<p>now, let's try to communicate with the dongle with the serial connection (RS 232). here we have to use <code>AT</code> commands to communicate. you can find the complete list of <code>AT</code> command set GSM/ 3G modems support from <a href="https://www.sparkfun.com/datasheets/Cellular%20Modules/AT_Commands_Reference_Guide_r0.pdf">here</a>.</p>
+<p>we will be using <code>picocom</code> terminal program to communicate with the dongle via serial. install it as below.</p>
+<p>[code lang=bash]<br />
+sudo apt-get install picocom<br />
+[/code]</p>
+<p>now open the serial port. make sure the substitute relevant port of the dongle.</p>
+<p>[code lang=bash]<br />
+picocom /dev/ttyUSB0 -b 115200 -l</p>
+<p>picocom v1.7</p>
+<p>port is        : /dev/gsmmodem<br />
+flowcontrol    : none<br />
+baudrate is    : 115200<br />
+parity is      : none<br />
+databits are   : 8<br />
+escape is      : C-a<br />
+local echo is  : no<br />
+noinit is      : no<br />
+noreset is     : no<br />
+nolock is      : yes<br />
+send_cmd is    : sz -vv<br />
+receive_cmd is : rz -vv<br />
+imap is        :<br />
+omap is        :<br />
+emap is        : crcrlf,delbs,</p>
+<p>Terminal ready<br />
+[/code]</p>
+<p>try issuing <code>AT</code> command first. you should get an output like following if everything so far alright. :) issue following <code>AT</code> commands as well to make <strong>enable text mode for SMS.</strong></p>
+<p>[code lang=bash]<br />
+AT<br />
+OK</p>
+<p>AT+CMGF=1<br />
+OK<br />
+[/code]</p>
+<p>now let's try to send a message. enter message in following format.<br />
+<code>AT+CMGS="phonenumber"<CR>the message to send<ctrl+z></code><br />
+after the number and the end of double quote hit <strong>enter</strong>, then type the message. hit <strong>ctrl + z</strong>.</p>
+<p>it'll give u a <code>OK</code> response and in a while you should receive a text message to your specified number. if all is good, <strong>its time to write our gateway piece.</strong> :D</p>
+<h2>building the gateway</h2>
+<p>i'll be using <code>flask</code> for the REST API and a python module called <code>python-messaging</code> for encoding text messages to <strong>PDU</strong> format.</p>
+<p>first install those packages by:</p>
+<p>[code lang=bash]<br />
+pip install flask<br />
+pip install git+https://github.com/pmarti/python-messaging.git<br />
+[/code]</p>
+<p>now, lets get into coding. open a new file, say <code>gateway.py</code>. lets first write a function to open the serial port and issue relevant <code>AT</code> command to send the message.</p>
+<p>[code lang=python]<br />
+from messaging.sms import SmsSubmit<br />
+import serial</p>
+<p>def send_text(number, text, path=&#039;/dev/ttyUSB0&#039;):<br />
+    sms = SmsSubmit(number, text)<br />
+    pdu = sms.to_pdu()[0]</p>
+<p>    # print len(sms.to_pdu())</p>
+<p>    # open the modem port (assumes Linux)<br />
+    ser = serial.Serial(path, timeout=1)<br />
+    # write the PDU length and wait 1 second till the<br />
+    # prompt appears (a more robust implementation<br />
+    # would wait till the prompt appeared)<br />
+    ser.write(&#039;AT+CMGS=%d\r&#039; % pdu.length)<br />
+    print ser.readlines()<br />
+    # write the PDU and send a ctrl+z escape<br />
+    ser.write(&#039;%s\x1a&#039; % pdu.pdu)<br />
+    ser.close()<br />
+[/code]</p>
+<p>now, let's attach this as a response to a valid <code>POST</code> request. we'll use HTTP basic auth for authentication.<br />
+1. first let's write a simple function to check user name and password.<br />
+2. then basic auth handler to be used in POST request<br />
+3. finally the POST request</p>
+<p>[code language="python"]<br />
+from flask import Flask, jsonify, request<br />
+from functools import wraps<br />
+app = Flask(__name__)</p>
+<p>def check_auth(username, password):<br />
+    """check username / pass"""<br />
+    return username == 'user' and password == 'mypassword'</p>
+<p>def requires_auth(f):<br />
+    @wraps(f)<br />
+    def decorated(*args, **kwargs):<br />
+        auth = request.authorization<br />
+        if not auth or not check_auth(auth.username, auth.password):<br />
+            return jsonify({'message': 'not logged in'}), 404<br />
+        return f(*args, **kwargs)<br />
+    return decorated</p>
+<p>@app.route("/")<br />
+def hello():<br />
+    return "python sms gateway :)"</p>
+<p># POST request handler<br />
+@app.route('/send', methods=['POST'])<br />
+@requires_auth<br />
+def create_task():<br />
+    if not request.json or not 'number' in request.json:<br />
+        return jsonify({'message': 'no number provided'}), 400</p>
+<p>    send_text(request.json['number'], request.json['text'])<br />
+    return jsonify({'message': 'message queued'}), 201</p>
+<p>if __name__ == "__main__":<br />
+    app.run(host='0.0.0.0', port=4000)<br />
+[/code]</p>
+<p>so the full code for the gateway will look like below.</p>
+<h3>gateway.py</h3>
+<p>[code language="python"]<br />
+from messaging.sms import SmsSubmit<br />
+import serial<br />
+from flask import Flask, jsonify, request<br />
+from functools import wraps<br />
+app = Flask(__name__)</p>
+<p>def check_auth(username, password):<br />
+    """check username / pass"""<br />
+    return username == 'user' and password == 'mypassword'</p>
+<p>def requires_auth(f):<br />
+    @wraps(f)<br />
+    def decorated(*args, **kwargs):<br />
+        auth = request.authorization<br />
+        if not auth or not check_auth(auth.username, auth.password):<br />
+            return jsonify({'message': 'not logged in'}), 404<br />
+        return f(*args, **kwargs)<br />
+    return decorated</p>
+<p>def send_text(number, text, path='/dev/ttyUSB0'):<br />
+    sms = SmsSubmit(number, text)<br />
+    pdu = sms.to_pdu()[0]</p>
+<p>    # print len(sms.to_pdu())</p>
+<p>    # open the modem port (assumes Linux)<br />
+    ser = serial.Serial(path, timeout=1)<br />
+    # write the PDU length and wait 1 second till the<br />
+    # prompt appears (a more robust implementation<br />
+    # would wait till the prompt appeared)<br />
+    ser.write('AT+CMGS=%d\r' % pdu.length)<br />
+    print ser.readlines()<br />
+    # write the PDU and send a ctrl+z escape<br />
+    ser.write('%s\x1a' % pdu.pdu)<br />
+    ser.close()</p>
+<p>@app.route("/")<br />
+def hello():<br />
+    return "python sms gateway :)"</p>
+<p>@app.route('/send', methods=['POST'])<br />
+@requires_auth<br />
+def create_task():<br />
+    if not request.json or not 'number' in request.json:<br />
+        return jsonify({'message': 'no number provided'}), 400</p>
+<p>    send_text(request.json['number'], request.json['text'])<br />
+    return jsonify({'message': 'message queued'}), 201</p>
+<p>if __name__ == "__main__":<br />
+    app.run(host='0.0.0.0', port=4000)</p>
+<p>[/code]</p>
+<p>now run the gateway by issuing <code>python gateway.py</code>. <strong>our gateway server now would be running on <code>http://localhost:4000</code> in the host machine</strong>. next let's use <strong>postman</strong> to send a test request and ensure that our gateway is working. download <strong>postman</strong> from chrome web store if you don't have it installed.</p>
+<p>format the request as below. :P</p>
+<p><img src="http://wathmal.me/blog/wp-content/uploads/2016/10/postman_1-2.png" alt="postman_1" width="864" height="490" class="aligncenter size-full wp-image-218" /></p>
+<p><img src="http://wathmal.me/blog/wp-content/uploads/2016/10/postman_3.png" alt="postman_3" width="864" height="744" class="aligncenter size-full wp-image-216" /></p>
+<p>if all is good, you should now receive a text from the dongle.</p>
+<p><strong>you can find the complete source code of the project from <a href="https://github.com/wathmal/sms-gateway">https://github.com/wathmal/sms-gateway</a>.</strong></p>
+<p><strong>references:</strong><br />
+* <a href="https://myraspberryandme.wordpress.com/2013/09/13/short-message-texting-sms-with-huawei-e220/">https://myraspberryandme.wordpress.com/2013/09/13/short-message-texting-sms-with-huawei-e220/</a><br />
+* <a href="https://github.com/pmarti/python-messaging/blob/master/doc/tutorial/sms.rst">https://github.com/pmarti/python-messaging/blob/master/doc/tutorial/sms.rst</a></p>

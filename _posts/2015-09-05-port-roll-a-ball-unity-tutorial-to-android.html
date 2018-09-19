@@ -1,0 +1,51 @@
+---
+layout: post
+status: publish
+published: true
+title: PORT ROLL-A-BALL UNITY TUTORIAL TO ANDROID
+author:
+  display_name: wathmal
+  login: wathmal
+  email: sasithawathmal@gmail.com
+  url: http://wathmal.me
+author_login: wathmal
+author_email: sasithawathmal@gmail.com
+author_url: http://wathmal.me
+wordpress_id: 40
+wordpress_url: https://onezerology.wordpress.com/?p=40
+date: '2015-09-05 11:44:46 +0530'
+date_gmt: '2015-09-05 06:14:46 +0530'
+categories:
+- coding
+tags:
+- acceleration
+- android
+- roll a ball
+- tilt
+- unity
+- unity3d
+comments: []
+---
+<p style="text-align: justify;">as unity 3d is now available for linux <3 i was playing with it sice then. the first tutorial you will find as a beginner in unity official site is roll-a-ball game which you can find in <a href="https://unity3d.com/learn/tutorials/projects/roll-ball-tutorial">here</a>. i assume you have completed this and willing to port this to android or ios which is the main intention of this post.</p>
+<p style="text-align: justify;">you can build and run this on pc or mobile devices. but if you try to run this on android or a mobile device your player object won't move as you moved it in pc. this is because we want to configure our player object to use accelerometer or gyroscope data from the mobile device as inputs.</p>
+<p style="text-align: justify;">what we did on the player controller script is we took the keyboard input of horizontal and vertical axis and created a 3d vector with having 0 as y component. one thing to make a note here is that in generally in vectors we are considering z axis as the axis which stands vertically from xy plane which governs up/ down movements. but in unity 3d y axis is the one which governs up/down movements. from here on i will use unity grid system for explanations.</p>
+<p>[caption id="attachment_41" align="aligncenter" width="449"]<img class="wp-image-41 size-full" src="http://wathmal.me/blog/wp-content/uploads/2015/09/xyz_diff.png" alt="unity axis vs cartesian axis" width="449" height="194" /> difference between unity axis and cartesian axis[/caption]</p>
+<p>[code language="csharp"]<br />
+float moveHorizontal= Input.GetAxis("Horizontal");<br />
+float moveVertical= Input.GetAxis("Vertical");</p>
+<p>Vector3 movement= new Vector3(moveHorizontal, 0.0f, moveVertical);<br />
+rb.AddForce(movement* speed);<br />
+[/code]</p>
+<p style="text-align: justify;">what we did here was first we generated a 3d vector from keyboard inputs for x and z movements. we made y axis as 0 as we don't want our player object to move vertically or up/down. then we add the vector multiplied by a scalar as force to our player object. if u think in simple physics we added a force to an object which is a multiply of a vector and scaler. does it ring a bell?? :-P</p>
+<p>[latex size="3"]\large F = m.\dot{a}[/latex]</p>
+<p style="text-align: justify;">we created an acceleration vector from keyboard inputs, and multiplied by the mass and add that force to the player object. the more you increase the mass more force is added, so the rate of change of object's position will increase.</p>
+<p style="text-align: justify;">so the only thing we have to do here is <strong>get the acceleration from the mobile device and add it to our acceleration vector</strong>. unity's interface to the input system provides this natively. you can get the acceleration vector from <code>Input.acceleration</code>. as we want to make y axis acceleration zero we can do following.</p>
+<p>[code language="csharp"]<br />
+Vector3 movement= new Vector3(Input.acceleration.x, 0.0f, Input.acceleration.y);<br />
+rb.AddForce(movement* speed);<br />
+[/code]</p>
+<p style="text-align: justify;">note that here in <code>Input.acceleration.y</code> provides the linear acceleration of y axis in cartesian grid system. we are all set. switch build platform to android and hit build and run. you may need to setup a bundle identifier for the app if you are switching platforms for the first time.</p>
+<p><strong>now you can play the game by tilting your phone</strong>. :)<br />
+<strong>references:</strong><br />
+<a href="https://unity3d.com/learn/tutorials/projects/roll-ball-tutorial" target="_blank">https://unity3d.com/learn/tutorials/projects/roll-ball-tutorial</a><br />
+<a href="http://answers.unity3d.com/answers/887453/view.html" target="_blank">http://answers.unity3d.com/answers/887453/view.html</a></p>
